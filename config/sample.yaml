@@ -1,0 +1,6 @@
+pwm:
+  - actuator_position: /actuator0
+  - actuator_velocity: /actuator1
+
+uart:
+  - serial_bus: /serial_bus0

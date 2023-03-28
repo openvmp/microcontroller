@@ -1,0 +1,16 @@
+/*
+ * OpenVMP, 2023
+ *
+ * Author: Roman Kuzmenko
+ * Created: 2023-03-26
+ *
+ * Licensed under Apache License, Version 2.0.
+ */
+
+#ifndef OPENVMP_REMOTE_MICROCONTROLLER_UART_HPP_INCLUDED
+#define OPENVMP_REMOTE_MICROCONTROLLER_UART_HPP_INCLUDED
+
+#define ADDR_UART_MIN 100
+#define ADDR_UART_MAX 199
+
+#endif  // OPENVMP_REMOTE_MICROCONTROLLER_UART_HPP_INCLUDED

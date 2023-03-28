@@ -1,0 +1,16 @@
+/*
+ * OpenVMP, 2023
+ *
+ * Author: Roman Kuzmenko
+ * Created: 2023-03-26
+ *
+ * Licensed under Apache License, Version 2.0.
+ */
+
+#ifndef OPENVMP_REMOTE_MICROCONTROLLER_PWM_HPP_INCLUDED
+#define OPENVMP_REMOTE_MICROCONTROLLER_PWM_HPP_INCLUDED
+
+#define ADDR_PWM_MIN 0
+#define ADDR_PWM_MAX 99
+
+#endif  // OPENVMP_REMOTE_MICROCONTROLLER_PWM_HPP_INCLUDED

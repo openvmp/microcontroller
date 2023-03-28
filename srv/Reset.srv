@@ -1,0 +1,5 @@
+bool hard
+bool reflash
+---
+
+bool success
