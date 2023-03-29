@@ -204,7 +204,7 @@ void Implementation::input_cb_real_(const std::string &msg) {
       }
 
       uint8_t len = ((uint8_t)input_queue_[5]);
-      if (input_queue_.length() < LENGTH_STREAM_MIN + len) {
+      if ((int)input_queue_.length() < LENGTH_STREAM_MIN + len) {
         // Not enough data yet
         break;
       }

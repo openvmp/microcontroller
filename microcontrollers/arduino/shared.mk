@@ -2,8 +2,9 @@ OBJDIR = ../../../../build/microcontrollers/arduino
 OBJDIR_CREATE = $(mkdir -p $OBJDIR)
 
 USER_LIB_PATH := ../
+ARDUINO_LIB_PATH = ${HOME}/Arduino/libraries
 ARDUINO_LIBS = arduino
-ARDUINO_LIBS += servo softwareserial
+ARDUINO_LIBS += Servo SoftwareSerial
 
 CFLAGS = -I$(realpath .) -I../../include
 CXXFLAGS = -I$(realpath .) -I../../include
