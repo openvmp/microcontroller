@@ -17,6 +17,7 @@
 #define COMMAND_READ 1    // read 2 bytes
 #define COMMAND_STREAM 2  // write <length> bytes
 
+#define LENGTH_CMD_MIN 5
 #define LENGTH_READ_REQ 5
 #define LENGTH_READ_RESP 7
 #define LENGTH_WRITE_REQ 7

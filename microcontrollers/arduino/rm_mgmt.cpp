@@ -39,6 +39,8 @@ extern "C" {
 void rm_mgmt_setup() {
   stream_data_size = 256;
   stream_data = (uint8_t *)malloc(stream_data_size);
+
+  Serial.begin(115200);
 }
 
 void rm_mgmt_loop() {

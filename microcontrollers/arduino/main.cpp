@@ -12,9 +12,8 @@
 #include "rm_gpio.hpp"
 #include "rm_mgmt.hpp"
 #include "rm_pwm.hpp"
+#include "rm_service.hpp"
 #include "rm_uart.hpp"
-
-extern "C" {
 
 void setup() {
   pinMode(13, OUTPUT);
@@ -23,6 +22,7 @@ void setup() {
   rm_pwm_setup();
   rm_gpio_setup();
   rm_uart_setup();
+  rm_service_setup();
 }
 
 void loop() {
@@ -31,8 +31,7 @@ void loop() {
     digitalWrite(13, HIGH - digitalRead(13));  // toggle led
   }
   rm_uart_loop();
+  rm_service_loop();
 
   delay(1);
 }
-
-}  // extern "C"

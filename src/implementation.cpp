@@ -15,6 +15,7 @@
 #include "remote_microcontroller/config.hpp"
 #include "remote_microcontroller/interface.hpp"
 #include "remote_microcontroller/proto_mgmt.hpp"
+#include "remote_microcontroller/proto_service.hpp"
 #include "remote_microcontroller/pwm_actuator_position.hpp"
 #include "remote_microcontroller/pwm_actuator_velocity.hpp"
 #include "remote_microcontroller/uart.hpp"
@@ -166,7 +167,7 @@ void Implementation::input_cb_real_(const std::string &msg) {
   RCLCPP_DEBUG(node_->get_logger(), "Queued data: %s",
                (ros2_serial::utils::bin2hex(input_queue_)).c_str());
 
-  while (input_queue_.length() > 0) {
+  while (input_queue_.length() >= LENGTH_CMD_MIN) {
     if ((uint8_t)input_queue_[0] != HEADER_1) {
       input_queue_ = input_queue_.substr(1);
       continue;
@@ -185,15 +186,21 @@ void Implementation::input_cb_real_(const std::string &msg) {
       uint16_t addr = ((uint8_t)input_queue_[3]) << 8;
       addr += ((uint8_t)input_queue_[4]);
 
-      auto acc_it = accessories_.find(addr);
-      if (acc_it == accessories_.end()) {
-        RCLCPP_ERROR(node_->get_logger(),
-                     "Received READ from an unknown accessory: %d", addr);
+      if (addr >= ADDR_SERVICE_MIN && addr <= ADDR_SERVICE_MAX) {
+	// Handle service traffic within this module.
+	// TODO(clairbee): handle ping messages
       } else {
-        uint16_t value = ((uint8_t)input_queue_[5]) << 8;
-        value += ((uint8_t)input_queue_[6]);
+	// Treat everything else as traffic related to one of the accessories.
+        auto acc_it = accessories_.find(addr);
+        if (acc_it == accessories_.end()) {
+          RCLCPP_ERROR(node_->get_logger(),
+                       "Received READ from an unknown accessory: %d", addr);
+        } else {
+          uint16_t value = ((uint8_t)input_queue_[5]) << 8;
+          value += ((uint8_t)input_queue_[6]);
 
-        acc_it->second->read_cb(value);
+          acc_it->second->read_cb(value);
+        }
       }
 
       input_queue_ = input_queue_.substr(LENGTH_READ_RESP);
