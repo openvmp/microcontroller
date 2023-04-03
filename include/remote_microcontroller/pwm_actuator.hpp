@@ -24,10 +24,6 @@ class PWMActuator : public PWM, public remote_actuator::Implementation {
   PWMActuator(rclcpp::Node *node,
               remote_microcontroller::Implementation *microcontroller,
               int index, const std::string &prefix);
-
- protected:
-  double position_max_mod_;
-  double velocity_max_mod_;
 };
 
 }  // namespace remote_microcontroller

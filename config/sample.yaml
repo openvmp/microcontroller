@@ -1,6 +1,23 @@
 pwm:
-  - actuator_position: /actuator0
-  - actuator_velocity: /actuator1
+  - type: actuator_position
+    name: driver_actuator0
+    prefix: /actuator0
+    actuator_velocity_min: -3.14
+    actuator_velocity_max: 3.14
+    pwm_min: 0
+    pwm_max: 255
+  - type: actuator_position
+    name: driver_actuator1
+    prefix: /actuator1
+    actuator_velocity_min: -3.14
+    actuator_velocity_max: 3.14
+    pwm_min: 0
+    pwm_max: 255
+  - type: simple_pwm
+    name: driver_actuator2
+    prefix: /pwm0
+    pwm_min: 0
+    pwm_max: 255
 
 uart:
   - serial_bus: /serial_bus0

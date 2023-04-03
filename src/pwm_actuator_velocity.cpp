@@ -17,8 +17,13 @@ PWMActuatorVelocity::PWMActuatorVelocity(
     : PWMActuator(node, microcontroller, index, prefix) {}
 
 void PWMActuatorVelocity::velocity_set_real_(double velocity) {
-  int value = 180 + (int)(180.0 * velocity / velocity_max_mod_);
-  write(value);
+  double velocity_max_mod = std::fabs(velocity_max_.as_double());
+  double velocity_min_mod = std::fabs(velocity_min_.as_double());
+  double velocity_mod =
+      velocity_max_mod > velocity_min_mod ? velocity_max_mod : velocity_min_mod;
+
+  double value = 0.5 + (int)(0.5 * velocity / velocity_mod);
+  pwm_set(value);
 }
 
 }  // namespace remote_microcontroller

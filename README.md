@@ -23,10 +23,20 @@ The high level features:
 
 The currently supported I/O:
 
-- [remote_actuator](https://github.com/openvmp/actuator) on PWM pins
-  (either position or velocity variants)
-- [remote_switch](https://github.com/openvmp/switch) on GPIO pins
-- [ros2_serial_bus](https://github.com/openvmp/serial_bus) on UART channels
+- PWM pins
+  - Arbitrary control using std_msgs::Float64
+  - [remote_actuator](https://github.com/openvmp/actuator)
+    (either position or velocity variants)
+- GPIO pins
+  - [remote_switch](https://github.com/openvmp/switch)
+- UART ports
+  - [ros2_serial_bus](https://github.com/openvmp/serial_bus)
+
+### Supported microcontrollers
+
+It currently supports Arduino Mega2560 and Arduino Uno. But it was only tested on Arduino Mega2560.
+
+Support for other Arduino boards can be added with trivial changes. Support for other microcontroller boards would require a little more effort. Contributors are very welcome!
 
 ### Why not micro-ROS?
 
@@ -35,7 +45,7 @@ microcontroller itself, allowing it to communicate with other ROS2 nodes over
 intermittent and lossy connections.
 
 In some designs where the microcontroller is permanently connected to
-a more powerful computer (e.g. Raspberry Pi), there is no benefit in using
+a more powerful computer (even a Raspberry Pi), there is no benefit in using
 the constrained resources of a microcontroller to run DDS and to handle all
 the ROS2 messaging overhead.
 If the system is designed in a way so that the worst case scenario

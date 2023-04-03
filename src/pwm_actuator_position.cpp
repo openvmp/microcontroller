@@ -17,8 +17,13 @@ PWMActuatorPosition::PWMActuatorPosition(
     : PWMActuator(node, microcontroller, index, prefix) {}
 
 void PWMActuatorPosition::position_set_real_(double position) {
-  int value = 180 + (int)(180.0 * position / position_max_mod_);
-  write(value);
+  double position_max_mod = std::fabs(position_max_.as_double());
+  double position_min_mod = std::fabs(position_min_.as_double());
+  double position_mod =
+      position_max_mod > position_min_mod ? position_max_mod : position_min_mod;
+
+  double value = 0.5 + (int)(0.5 * position / position_mod);
+  pwm_set(value);
 }
 
 }  // namespace remote_microcontroller

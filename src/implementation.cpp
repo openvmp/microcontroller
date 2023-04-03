@@ -62,7 +62,8 @@ Implementation::Implementation(
     auto node_name = pwm["name"].as<std::string>();
     auto node_prefix = pwm["prefix"].as<std::string>();
 
-    if (type == "actuator_position" || type == "actuator_velocity") {
+    if (type == "actuator_position" || type == "actuator_velocity" ||
+        type == "simple_pwm") {
       std::string ns = node_->get_namespace();
       auto node_options = rclcpp::NodeOptions{};
       for (const auto &param : pwm) {
@@ -91,19 +92,20 @@ Implementation::Implementation(
           std::make_shared<rclcpp::Node>(node_name, ns, node_options);
       exec->add_node(pwm_node);
 
-      std::shared_ptr<PWMActuator> ptr;
+      std::shared_ptr<PWM> ptr;
       if (type == "actuator_position") {
         RCLCPP_DEBUG(node_->get_logger(), "Found a position actuator entry");
         ptr = std::make_shared<PWMActuatorVelocity>(node_, this, index,
                                                     node_prefix);
-      } else {
+      } else if (type == "actuator_position") {
         RCLCPP_DEBUG(node_->get_logger(), "Found a velocity actuator entry");
         ptr = std::make_shared<PWMActuatorPosition>(node_, this, index,
                                                     node_prefix);
+      } else {
+        RCLCPP_DEBUG(node_->get_logger(), "Found a simple pwm entry");
+        ptr = std::make_shared<PWM>(node_, this, index, node_prefix);
       }
 
-      actuators_.push_back(
-          std::static_pointer_cast<remote_actuator::Implementation>(ptr));
       accessories_.insert({ptr->get_addr(), ptr});
     } else {
       RCLCPP_ERROR(node_->get_logger(), "Found an incorrect pwm entry");
@@ -119,8 +121,6 @@ Implementation::Implementation(
       RCLCPP_DEBUG(node_->get_logger(), "Found a serial entry");
       auto ptr = std::make_shared<UART>(node_, this, index,
                                         uart["serial"].as<std::string>());
-      serials_.push_back(
-          std::static_pointer_cast<ros2_serial::Implementation>(ptr));
       accessories_.insert({ptr->get_addr(), ptr});
     } else {
       RCLCPP_ERROR(node_->get_logger(), "Found an incorrect uart entry");
@@ -187,10 +187,10 @@ void Implementation::input_cb_real_(const std::string &msg) {
       addr += ((uint8_t)input_queue_[4]);
 
       if (addr >= ADDR_SERVICE_MIN && addr <= ADDR_SERVICE_MAX) {
-	// Handle service traffic within this module.
-	// TODO(clairbee): handle ping messages
+        // Handle service traffic within this module.
+        // TODO(clairbee): handle ping messages
       } else {
-	// Treat everything else as traffic related to one of the accessories.
+        // Treat everything else as traffic related to one of the accessories.
         auto acc_it = accessories_.find(addr);
         if (acc_it == accessories_.end()) {
           RCLCPP_ERROR(node_->get_logger(),

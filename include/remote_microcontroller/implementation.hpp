@@ -41,8 +41,6 @@ class Implementation final : public Interface {
   std::mutex input_queue_mutex_;
 
   rclcpp::Parameter param_config_;
-  std::vector<std::shared_ptr<remote_actuator::Interface>> actuators_;
-  std::vector<std::shared_ptr<ros2_serial::Implementation>> serials_;
 
   std::map<uint16_t, std::shared_ptr<Accessory>> accessories_;
 
