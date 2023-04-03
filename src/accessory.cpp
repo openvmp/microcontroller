@@ -11,9 +11,19 @@
 
 namespace remote_microcontroller {
 
-Accessory::Accessory(Implementation* microcontroller, uint16_t addr,
+Accessory::Accessory(rclcpp::Node *node, Implementation* microcontroller, uint16_t addr,
                      const std::string& prefix)
-    : microcontroller_{microcontroller}, addr_{addr}, prefix_{prefix} {}
+    : node_{node}, microcontroller_{microcontroller}, addr_{addr},
+      prefix_{prefix} {}
+
+const std::string Accessory::get_prefix() const {
+  std::string prefix = node_->get_namespace();
+
+  if (prefix == "/") prefix = "";
+  prefix += prefix_;
+
+  return prefix;
+}
 
 void Accessory::write(uint16_t value) { microcontroller_->write(addr_, value); }
 

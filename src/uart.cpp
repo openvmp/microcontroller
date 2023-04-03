@@ -14,7 +14,7 @@ namespace remote_microcontroller {
 UART::UART(rclcpp::Node *node,
            remote_microcontroller::Implementation *microcontroller, int index,
            const std::string &prefix)
-    : Accessory(microcontroller, (uint16_t)(ADDR_UART_MIN + index), prefix),
+    : Accessory(node, microcontroller, (uint16_t)(ADDR_UART_MIN + index), prefix),
       ros2_serial::Implementation(node, prefix) {}
 
 void UART::read_cb(uint16_t value) {

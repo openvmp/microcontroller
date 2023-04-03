@@ -14,14 +14,14 @@ namespace remote_microcontroller {
 PWM::PWM(rclcpp::Node *node,
          remote_microcontroller::Implementation *microcontroller, int index,
          const std::string &prefix)
-    : Accessory(microcontroller, ((uint16_t)(ADDR_PWM_MIN + index)), prefix) {
+    : Accessory(node, microcontroller, ((uint16_t)(ADDR_PWM_MIN + index)), prefix) {
   node->declare_parameter("pwm_min", 0);
   node->get_parameter("pwm_min", param_min_);
   node->declare_parameter("pwm_max", 255);
   node->get_parameter("pwm_max", param_max_);
 
   topic_pwm_ =
-      node->create_publisher<std_msgs::msg::Float64>(prefix + "/pwm", 1);
+      node->create_publisher<std_msgs::msg::Float64>(get_prefix() + "/pwm", 1);
 }
 
 void PWM::pwm_set(double value) {

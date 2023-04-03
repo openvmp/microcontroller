@@ -59,13 +59,15 @@ Implementation::Implementation(
   for (const auto &pwm : pwms) {
     RCLCPP_DEBUG(node_->get_logger(), "Found a pwm entry in the config");
     auto type = pwm["type"].as<std::string>();
-    auto node_name = pwm["name"].as<std::string>();
+    auto node_name = "driver_microcontroller_" + pwm["name"].as<std::string>();
     auto node_prefix = pwm["prefix"].as<std::string>();
 
     if (type == "actuator_position" || type == "actuator_velocity" ||
         type == "simple_pwm") {
       std::string ns = node_->get_namespace();
       auto node_options = rclcpp::NodeOptions{};
+
+      // Prepare node parameters
       for (const auto &param : pwm) {
         const auto &key = param.first.as<std::string>();
 
@@ -86,26 +88,29 @@ Implementation::Implementation(
           }
         }
       }
-      // FIXME(clairbee): create the node
+
+      // Create the node
       node_options.use_intra_process_comms(true);
       auto pwm_node =
           std::make_shared<rclcpp::Node>(node_name, ns, node_options);
       exec->add_node(pwm_node);
 
+      // Instantiate the accessory
       std::shared_ptr<PWM> ptr;
       if (type == "actuator_position") {
         RCLCPP_DEBUG(node_->get_logger(), "Found a position actuator entry");
-        ptr = std::make_shared<PWMActuatorVelocity>(node_, this, index,
+        ptr = std::make_shared<PWMActuatorVelocity>(pwm_node.get(), this, index,
                                                     node_prefix);
       } else if (type == "actuator_position") {
         RCLCPP_DEBUG(node_->get_logger(), "Found a velocity actuator entry");
-        ptr = std::make_shared<PWMActuatorPosition>(node_, this, index,
+        ptr = std::make_shared<PWMActuatorPosition>(pwm_node.get(), this, index,
                                                     node_prefix);
       } else {
         RCLCPP_DEBUG(node_->get_logger(), "Found a simple pwm entry");
-        ptr = std::make_shared<PWM>(node_, this, index, node_prefix);
+        ptr = std::make_shared<PWM>(pwm_node.get(), this, index, node_prefix);
       }
 
+      // Store the accessory in the collection
       accessories_.insert({ptr->get_addr(), ptr});
     } else {
       RCLCPP_ERROR(node_->get_logger(), "Found an incorrect pwm entry");
@@ -119,8 +124,21 @@ Implementation::Implementation(
     RCLCPP_DEBUG(node_->get_logger(), "Found an uart entry in the config");
     if (uart["serial"]) {
       RCLCPP_DEBUG(node_->get_logger(), "Found a serial entry");
-      auto ptr = std::make_shared<UART>(node_, this, index,
+
+      // Create the node
+      auto node_name = "driver_microcontroller_uart" + std::to_string(index);
+      std::string ns = node_->get_namespace();
+      auto node_options = rclcpp::NodeOptions{};
+      node_options.use_intra_process_comms(true);
+      auto uart_node =
+          std::make_shared<rclcpp::Node>(node_name, ns, node_options);
+      exec->add_node(uart_node);
+
+      // Instantiate the accessory
+      auto ptr = std::make_shared<UART>(uart_node.get(), this, index,
                                         uart["serial"].as<std::string>());
+
+      // Store the accessory in the collection
       accessories_.insert({ptr->get_addr(), ptr});
     } else {
       RCLCPP_ERROR(node_->get_logger(), "Found an incorrect uart entry");

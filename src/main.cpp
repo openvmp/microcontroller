@@ -13,10 +13,15 @@
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
   auto exec = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
-  auto node = std::make_shared<remote_microcontroller::Node>(exec);
+  std::shared_ptr<remote_microcontroller::Node> node;
 
-  exec->add_node(node);
+  auto thread = std::thread([exec, &node]() {
+    node = std::make_shared<remote_microcontroller::Node>(exec);
+    exec->add_node(node);
+  });
+
   exec->spin();
+  exec.reset();
 
   rclcpp::shutdown();
   return 0;
