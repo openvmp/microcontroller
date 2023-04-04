@@ -17,12 +17,9 @@ PWMActuatorVelocity::PWMActuatorVelocity(
     : PWMActuator(node, microcontroller, index, prefix) {}
 
 void PWMActuatorVelocity::velocity_set_real_(double velocity) {
-  double velocity_max_mod = std::fabs(velocity_max_.as_double());
-  double velocity_min_mod = std::fabs(velocity_min_.as_double());
-  double velocity_mod =
-      velocity_max_mod > velocity_min_mod ? velocity_max_mod : velocity_min_mod;
+  std::lock_guard<std::mutex> guard(param_maxmin_lock_);
 
-  double value = 0.5 + (int)(0.5 * velocity / velocity_mod);
+  double value = 0.5 + (int)(0.5 * velocity / velocity_mod_);
   pwm_set(value);
 }
 
