@@ -116,6 +116,10 @@ Add the following section to the URDF file:
       <plugin>remote_hardware_interface/RemoteSystemInterface</plugin>
       <param name="namespace">/robot</param>
     </hardware>
+    <joint name="joint0">
+      <param name="prefix">/robot/actuator/joint0</param>
+      <command_interface name="velocity" />
+    </joint>
   </ros2_control>
 ```
 
