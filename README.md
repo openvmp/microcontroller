@@ -87,9 +87,9 @@ Here is an example of the configuration file for controlling a single servo:
 ```yaml
 pwm:
   - channel: 0 # maps to pin 2 on Arduino Mega2560 and pin 3 on Arduino Uno
-    type: simple_pwm
-    name: actuator0
-    prefix: /pwm0
+    type: simple_pwm # fixed value, one of several supported types
+    name: actuator0 # this will be used to produce the node name, no need to match with any other values
+    prefix: /pwm0 # where to expose ROS2 interfaces
     pwm_min: 0
     pwm_max: 255
 ```
@@ -97,7 +97,7 @@ pwm:
 If this configuration file is used, then the following command can be used to control the servo motor:
 
 ```bash
-ros2 topic pub /pwm0/pwm std_msgs/msg/Int16 '{"data":150}'
+ros2 topic pub /pwm0/pwm std_msgs/msg/UInt16 '{"data":150}'
 ```
 
 ### Integration with `ros2_control`
@@ -117,7 +117,6 @@ Add the following section to the URDF file:
       <param name="namespace">/robot</param>
     </hardware>
     <joint name="joint0">
-      <param name="prefix">/robot/actuator/joint0</param>
       <command_interface name="velocity" />
     </joint>
   </ros2_control>
@@ -128,7 +127,7 @@ Add the following into `ros2_controllers.yaml`:
 ```yaml
 controller_manager:
   ros__parameters:
-    update_rate: 20
+    update_rate: 20 # match this value with your performance expectations
 
     velocity_controller:
       type: velocity_controllers/JointGroupVelocityController
@@ -144,14 +143,19 @@ Use the following configuration file (note that `simple_pwm` is replaced with `a
 ```yaml
 pwm:
   - channel: 0 # maps to the pin 2 on Mega2560 and the pin 3 on Uno
-    type: actuator_velocity
-    name: joint0
-    prefix: /robot/actuator/joint0
-    actuator_velocity_min: -3.14
-    actuator_velocity_max: 3.14
+    type: actuator_velocity # can be "actuator_position" depending on the type of servo
+    name: joint0 # this will be used to produce the node name, no need to match with any other values
+    prefix: /robot/actuator/joint0 # namespace + "/actuator/" + joint name
+    actuator_velocity_min: -3.14 # or "actuator_position_min"
+    actuator_velocity_max: 3.14 # or "actuator_position_max"
     pwm_min: 0
     pwm_max: 255
 ```
+
+Please, note, if the channel is not specified explicitly
+then the natural order of channels is assumed
+(the first YAML entry is the channel 0,
+the second one is the channel 1 etc).
 
 Now launch your robot and let `ros2_control` do the work.
 
