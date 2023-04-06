@@ -19,8 +19,11 @@ PWMActuatorPosition::PWMActuatorPosition(
 void PWMActuatorPosition::position_set_real_(double position) {
   std::lock_guard<std::mutex> guard(param_maxmin_lock_);
 
-  double value = 0.5 + (int)(0.5 * position / position_mod_);
-  pwm_set(value);
+  position -= position_min_;
+  position /= position_max_ - position_min_;
+  // position is now remaped from [min;max] to [0;1]
+
+  pwm_set(pwm_min_ + position * (pwm_max_ - pwm_min_));
 }
 
 }  // namespace remote_microcontroller

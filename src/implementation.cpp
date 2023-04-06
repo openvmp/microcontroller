@@ -62,6 +62,11 @@ Implementation::Implementation(
     auto node_name = "driver_microcontroller_" + pwm["name"].as<std::string>();
     auto node_prefix = pwm["prefix"].as<std::string>();
 
+    int channel = index;
+    if (pwm["channel"]) {
+      channel = pwm["channel"].as<int>();
+    }
+
     if (type == "actuator_position" || type == "actuator_velocity" ||
         type == "simple_pwm") {
       std::string ns = node_->get_namespace();
@@ -99,15 +104,15 @@ Implementation::Implementation(
       std::shared_ptr<PWM> ptr;
       if (type == "actuator_position") {
         RCLCPP_DEBUG(node_->get_logger(), "Found a position actuator entry");
-        ptr = std::make_shared<PWMActuatorVelocity>(pwm_node.get(), this, index,
-                                                    node_prefix);
+        ptr = std::make_shared<PWMActuatorVelocity>(pwm_node.get(), this,
+                                                    channel, node_prefix);
       } else if (type == "actuator_position") {
         RCLCPP_DEBUG(node_->get_logger(), "Found a velocity actuator entry");
-        ptr = std::make_shared<PWMActuatorPosition>(pwm_node.get(), this, index,
-                                                    node_prefix);
+        ptr = std::make_shared<PWMActuatorPosition>(pwm_node.get(), this,
+                                                    channel, node_prefix);
       } else {
         RCLCPP_DEBUG(node_->get_logger(), "Found a simple pwm entry");
-        ptr = std::make_shared<PWM>(pwm_node.get(), this, index, node_prefix);
+        ptr = std::make_shared<PWM>(pwm_node.get(), this, channel, node_prefix);
       }
 
       // Store the accessory in the collection
@@ -125,6 +130,11 @@ Implementation::Implementation(
     if (uart["serial"]) {
       RCLCPP_DEBUG(node_->get_logger(), "Found a serial entry");
 
+      int channel = index;
+      if (uart["channel"]) {
+        channel = uart["channel"].as<int>();
+      }
+
       // Create the node
       auto node_name = "driver_microcontroller_uart" + std::to_string(index);
       std::string ns = node_->get_namespace();
@@ -135,7 +145,7 @@ Implementation::Implementation(
       exec->add_node(uart_node);
 
       // Instantiate the accessory
-      auto ptr = std::make_shared<UART>(uart_node.get(), this, index,
+      auto ptr = std::make_shared<UART>(uart_node.get(), this, channel,
                                         uart["serial"].as<std::string>());
 
       // Store the accessory in the collection

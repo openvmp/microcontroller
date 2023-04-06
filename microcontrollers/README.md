@@ -8,6 +8,8 @@ All arduino boards have to be connected to the computer using the USB port.
 Don't forget to supply additional power (whether through the power port or
 the Vin port).
 
+Please, note, all pins are listed in the order of channels (starting with the channel 0).
+
 ### Arduino Mega2560
 
 There are 15 PWM channels:

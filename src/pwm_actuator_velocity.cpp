@@ -19,8 +19,11 @@ PWMActuatorVelocity::PWMActuatorVelocity(
 void PWMActuatorVelocity::velocity_set_real_(double velocity) {
   std::lock_guard<std::mutex> guard(param_maxmin_lock_);
 
-  double value = 0.5 + (int)(0.5 * velocity / velocity_mod_);
-  pwm_set(value);
+  velocity -= velocity_min_;
+  velocity /= velocity_max_ - velocity_min_;
+  // velocity is now remaped from [min;max] to [0;1]
+
+  pwm_set(pwm_min_ + velocity * (pwm_max_ - pwm_min_));
 }
 
 }  // namespace remote_microcontroller
