@@ -24,9 +24,10 @@ The high level features:
 The currently supported I/O:
 
 - PWM pins
-  - Arbitrary control using std_msgs::Float64
+  - Arbitrary control using std\_msgs::msg::UInt16
   - [remote_actuator](https://github.com/openvmp/actuator)
-    (either position or velocity variants)
+    - both position and velocity variants are supported
+    - see [remote_hardware_interface](https://github.com/openvmp/remote_hardware_interface) for info on how to consume this interface
 - GPIO pins
   - [remote_switch](https://github.com/openvmp/switch)
 - UART ports
