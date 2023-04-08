@@ -9,6 +9,8 @@
 
 #include "remote_microcontroller/implementation.hpp"
 
+#include <yaml.h>
+
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <locale>
 
@@ -21,7 +23,6 @@
 #include "remote_microcontroller/uart.hpp"
 #include "ros2_serial/factory.hpp"
 #include "ros2_serial/utils.hpp"
-#include "yaml-cpp/yaml.h"
 
 namespace remote_microcontroller {
 
@@ -30,6 +31,7 @@ Implementation::Implementation(
     std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> exec)
     : Interface{node}, exec_{exec} {
   auto prefix = get_prefix_();
+  std::string ns = node_->get_namespace();
 
   prov_ = ros2_serial::Factory::New(node);
   prov_->register_input_cb(&Implementation::input_cb_, this);
@@ -46,115 +48,159 @@ Implementation::Implementation(
 
   // Static part is done, now dynamic behavior driven by the config
   auto config_filename = param_config_.as_string();
-  YAML::Node config = YAML::LoadFile(config_filename);
+  auto config_file = fopen(config_filename.c_str(), "r");
+  yaml_parser_t parser;
+  yaml_document_t doc;
+  yaml_parser_set_input_file(&parser, config_file);
+  if (yaml_parser_load(&parser, &doc)) {
+    yaml_node_t *root = yaml_document_get_root_node(&doc);
 
-  if (!config || config.IsNull() || !config.IsMap()) {
-    RCLCPP_ERROR(node_->get_logger(), "Failed to parse: %s",
-                 config_filename.c_str());
-    return;
-  }
+    if (root->type == YAML_MAPPING_NODE) {
+      for (auto root_item = root->data.mapping.pairs.start;
+           root_item < root->data.mapping.pairs.end; root_item++) {
+        auto root_key = yaml_document_get_node(&doc, root_item->key);
+        if (root_key->type != YAML_SCALAR_NODE) continue;
 
-  auto pwms = config[MICROCONTROLLER_CONFIG_CHAPTER_PWM];
-  int index = 0;
-  for (const auto &pwm : pwms) {
-    RCLCPP_DEBUG(node_->get_logger(), "Found a pwm entry in the config");
-    auto type = pwm["type"].as<std::string>();
-    auto node_name = "driver_microcontroller_" + pwm["name"].as<std::string>();
-    auto node_prefix = pwm["prefix"].as<std::string>();
+        auto accessories = yaml_document_get_node(&doc, root_item->value);
+        if (accessories->type != YAML_SEQUENCE_NODE) continue;
 
-    int channel = index;
-    if (pwm["channel"]) {
-      channel = pwm["channel"].as<int>();
-    }
+        if (!strcmp((char *)root_key->data.scalar.value,
+                    MICROCONTROLLER_CONFIG_CHAPTER_PWM)) {
+          int i;
+          yaml_node_item_t *accessory_item;
+          for (accessory_item = accessories->data.sequence.items.start, i = 0;
+               accessory_item < accessories->data.sequence.items.top;
+               ++accessory_item, ++i) {
+            auto accessory = yaml_document_get_node(&doc, *accessory_item);
+            if (accessory->type != YAML_MAPPING_NODE) continue;
 
-    if (type == "actuator_position" || type == "actuator_velocity" ||
-        type == "simple_pwm") {
-      std::string ns = node_->get_namespace();
-      auto node_options = rclcpp::NodeOptions{};
+            std::string type;
+            std::string node_name;
+            std::string node_prefix;
+            int channel = i;
+            auto node_options = rclcpp::NodeOptions{};
 
-      // Prepare node parameters
-      for (const auto &param : pwm) {
-        const auto &key = param.first.as<std::string>();
+            for (auto param_item = accessory->data.mapping.pairs.start;
+                 param_item < accessory->data.mapping.pairs.end; param_item++) {
+              auto param_key = yaml_document_get_node(&doc, param_item->key);
+              if (param_key->type != YAML_SCALAR_NODE) continue;
+              auto key = std::string((char *)param_key->data.scalar.value);
 
-        if (key == "type" || key == "name" || key == "prefix") {
-          continue;
-        }
+              auto param_value =
+                  yaml_document_get_node(&doc, param_item->value);
+              if (param_value->type != YAML_SCALAR_NODE) continue;
 
-        try {
-          auto value = param.second.as<int>();
-          node_options.parameter_overrides().push_back({key, value});
-        } catch (const std::exception &_e) {
-          try {
-            auto value = param.second.as<double>();
-            node_options.parameter_overrides().push_back({key, value});
-          } catch (const std::exception &_e) {
-            auto value = param.second.as<std::string>();
-            node_options.parameter_overrides().push_back({key, value});
+              if (!strcmp((char *)param_key->data.scalar.value, "type")) {
+                type = std::string((char *)param_value->data.scalar.value);
+              } else if (!strcmp((char *)param_key->data.scalar.value,
+                                 "name")) {
+                node_name = "driver_microcontroller_" +
+                            std::string((char *)param_value->data.scalar.value);
+              } else if (!strcmp((char *)param_key->data.scalar.value,
+                                 "prefix")) {
+                node_prefix =
+                    std::string((char *)param_value->data.scalar.value);
+              } else if (!strcmp((char *)param_key->data.scalar.value,
+                                 "channel")) {
+                channel = std::atoi((char *)param_value->data.scalar.value);
+              } else {
+                try {
+                  int value = std::atoi((char *)param_value->data.scalar.value);
+                  node_options.parameter_overrides().push_back({key, value});
+                } catch (const std::exception &_e) {
+                  try {
+                    double value =
+                        std::atof((char *)param_value->data.scalar.value);
+                    node_options.parameter_overrides().push_back({key, value});
+                  } catch (const std::exception &_e) {
+                    auto value =
+                        std::string((char *)param_value->data.scalar.value);
+                    node_options.parameter_overrides().push_back({key, value});
+                  }
+                }
+              }
+
+              // Create the node
+              node_options.use_intra_process_comms(true);
+              auto pwm_node =
+                  std::make_shared<rclcpp::Node>(node_name, ns, node_options);
+              exec->add_node(pwm_node);
+
+              // Instantiate the accessory
+              std::shared_ptr<PWM> ptr;
+              if (type == "actuator_position") {
+                RCLCPP_DEBUG(node_->get_logger(),
+                             "Found a position actuator entry");
+                ptr = std::make_shared<PWMActuatorVelocity>(
+                    pwm_node.get(), this, channel, node_prefix);
+              } else if (type == "actuator_position") {
+                RCLCPP_DEBUG(node_->get_logger(),
+                             "Found a velocity actuator entry");
+                ptr = std::make_shared<PWMActuatorPosition>(
+                    pwm_node.get(), this, channel, node_prefix);
+              } else {
+                RCLCPP_DEBUG(node_->get_logger(), "Found a simple pwm entry");
+                ptr = std::make_shared<PWM>(pwm_node.get(), this, channel,
+                                            node_prefix);
+              }
+
+              // Store the accessory in the collection
+              accessories_.insert({ptr->get_addr(), ptr});
+            }
+          }
+        } else if (!strcmp((char *)root_key->data.scalar.value,
+                           MICROCONTROLLER_CONFIG_CHAPTER_UART)) {
+          int i;
+          yaml_node_item_t *accessory_item;
+          for (accessory_item = accessories->data.sequence.items.start, i = 0;
+               accessory_item < accessories->data.sequence.items.top;
+               ++accessory_item, ++i) {
+            auto accessory = yaml_document_get_node(&doc, *accessory_item);
+            if (accessory->type != YAML_MAPPING_NODE) continue;
+
+            std::string node_prefix;
+            int channel = i;
+            auto node_options = rclcpp::NodeOptions{};
+
+            for (auto param_item = accessory->data.mapping.pairs.start;
+                 param_item < accessory->data.mapping.pairs.end; param_item++) {
+              auto param_key = yaml_document_get_node(&doc, param_item->key);
+              if (param_key->type != YAML_SCALAR_NODE) continue;
+              auto key = std::string((char *)param_key->data.scalar.value);
+
+              auto param_value =
+                  yaml_document_get_node(&doc, param_item->value);
+              if (param_value->type != YAML_SCALAR_NODE) continue;
+
+              if (strcmp((char *)param_key->data.scalar.value, "serial")) {
+                node_prefix =
+                    std::string((char *)param_value->data.scalar.value);
+              } else if (!strcmp((char *)param_key->data.scalar.value,
+                                 "channel")) {
+                channel = std::atoi((char *)param_value->data.scalar.value);
+              }
+
+              auto node_name =
+                  "driver_microcontroller_uart" + std::to_string(channel);
+              node_options.use_intra_process_comms(true);
+              auto uart_node =
+                  std::make_shared<rclcpp::Node>(node_name, ns, node_options);
+              exec->add_node(uart_node);
+
+              // Instantiate the accessory
+              auto ptr = std::make_shared<UART>(uart_node.get(), this, channel,
+                                                node_prefix);
+
+              // Store the accessory in the collection
+              accessories_.insert({ptr->get_addr(), ptr});
+            }
           }
         }
       }
-
-      // Create the node
-      node_options.use_intra_process_comms(true);
-      auto pwm_node =
-          std::make_shared<rclcpp::Node>(node_name, ns, node_options);
-      exec->add_node(pwm_node);
-
-      // Instantiate the accessory
-      std::shared_ptr<PWM> ptr;
-      if (type == "actuator_position") {
-        RCLCPP_DEBUG(node_->get_logger(), "Found a position actuator entry");
-        ptr = std::make_shared<PWMActuatorVelocity>(pwm_node.get(), this,
-                                                    channel, node_prefix);
-      } else if (type == "actuator_position") {
-        RCLCPP_DEBUG(node_->get_logger(), "Found a velocity actuator entry");
-        ptr = std::make_shared<PWMActuatorPosition>(pwm_node.get(), this,
-                                                    channel, node_prefix);
-      } else {
-        RCLCPP_DEBUG(node_->get_logger(), "Found a simple pwm entry");
-        ptr = std::make_shared<PWM>(pwm_node.get(), this, channel, node_prefix);
-      }
-
-      // Store the accessory in the collection
-      accessories_.insert({ptr->get_addr(), ptr});
-    } else {
-      RCLCPP_ERROR(node_->get_logger(), "Found an incorrect pwm entry");
     }
-    index++;
+    yaml_document_delete(&doc);
   }
-
-  auto uarts = config[MICROCONTROLLER_CONFIG_CHAPTER_UART];
-  index = 0;
-  for (auto uart : uarts) {
-    RCLCPP_DEBUG(node_->get_logger(), "Found an uart entry in the config");
-    if (uart["serial"]) {
-      RCLCPP_DEBUG(node_->get_logger(), "Found a serial entry");
-
-      int channel = index;
-      if (uart["channel"]) {
-        channel = uart["channel"].as<int>();
-      }
-
-      // Create the node
-      auto node_name = "driver_microcontroller_uart" + std::to_string(index);
-      std::string ns = node_->get_namespace();
-      auto node_options = rclcpp::NodeOptions{};
-      node_options.use_intra_process_comms(true);
-      auto uart_node =
-          std::make_shared<rclcpp::Node>(node_name, ns, node_options);
-      exec->add_node(uart_node);
-
-      // Instantiate the accessory
-      auto ptr = std::make_shared<UART>(uart_node.get(), this, channel,
-                                        uart["serial"].as<std::string>());
-
-      // Store the accessory in the collection
-      accessories_.insert({ptr->get_addr(), ptr});
-    } else {
-      RCLCPP_ERROR(node_->get_logger(), "Found an incorrect uart entry");
-    }
-    index++;
-  }
+  yaml_parser_delete(&parser);
 }
 
 bool Implementation::reset_(bool hard, bool reflash) {
@@ -218,7 +264,8 @@ void Implementation::input_cb_real_(const std::string &msg) {
         // Handle service traffic within this module.
         // TODO(clairbee): handle ping messages
       } else {
-        // Treat everything else as traffic related to one of the accessories.
+        // Treat everything else as traffic related to one of the
+        // accessories.
         auto acc_it = accessories_.find(addr);
         if (acc_it == accessories_.end()) {
           RCLCPP_ERROR(node_->get_logger(),

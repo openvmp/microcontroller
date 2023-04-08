@@ -48,11 +48,13 @@ distribution packages, you will have to clone all of them into the `src`
 folder of your ROS2 workspace.
 
 ```bash
+mkdir src
 git clone https://github.com/openvmp/actuator.git src/remote_actuator
 git clone https://github.com/openvmp/encoder.git src/remote_encoder
 git clone https://github.com/openvmp/switch.git src/remote_switch
 git clone https://github.com/openvmp/serial.git src/ros2_serial
 git clone https://github.com/openvmp/microcontroller.git src/remote_microcontroller
+git clone https://github.com/jbeder/yaml-cpp.git src/yaml-cpp
 ```
 
 After building the workspace, you can link against this package as a library

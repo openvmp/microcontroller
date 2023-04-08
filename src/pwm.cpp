@@ -44,8 +44,8 @@ void PWM::pwm_set(uint16_t value) {
   write(value);
 }
 
-void PWM::pwm_set_callback_(std_msgs::msg::UInt16 value) {
-  pwm_set(value.data);
+void PWM::pwm_set_callback_(const std_msgs::msg::UInt16::SharedPtr value) {
+  pwm_set(value->data);
 }
 
 // PWM does not use register read/write ops

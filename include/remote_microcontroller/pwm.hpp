@@ -42,7 +42,7 @@ class PWM : public Accessory {
   rclcpp::Publisher<std_msgs::msg::UInt16>::SharedPtr topic_pwm_max_;
   rclcpp::Subscription<std_msgs::msg::UInt16>::SharedPtr topic_pwm_;
 
-  void pwm_set_callback_(std_msgs::msg::UInt16);
+  void pwm_set_callback_(const std_msgs::msg::UInt16::SharedPtr);
 };
 
 }  // namespace remote_microcontroller
