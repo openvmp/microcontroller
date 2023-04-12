@@ -70,8 +70,6 @@ void rm_pul(uint8_t addr, uint16_t value) {
       *tail = channel;
     }
     tail = &pul[channel].next;
-
-    pul_initialized[channel] = 1;
   } else {
     // when did we change the state last time
     pul[channel].micros_state_next -= pul[channel].micros_between_states;
@@ -79,7 +77,12 @@ void rm_pul(uint8_t addr, uint16_t value) {
     pul[channel].micros_between_states = delta;
     // when will we change the state next time
     pul[channel].micros_state_next += pul[channel].micros_between_states;
+
+    if (pul[channel].micros_state_next < now) {
+      pul[channel].micros_state_next = now;
+    }
   }
+
   pul[channel].state = PUL_STATE_RUNNING;
 }
 
