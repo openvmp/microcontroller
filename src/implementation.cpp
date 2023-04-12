@@ -12,8 +12,8 @@
 #include <yaml.h>
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
-#include <locale>
 #include <charconv>
+#include <locale>
 
 #include "remote_microcontroller/config.hpp"
 #include "remote_microcontroller/gpio_switch.hpp"
@@ -92,12 +92,14 @@ Implementation::Implementation(
 
           for (auto param_item = accessory->data.mapping.pairs.start;
                param_item < accessory->data.mapping.pairs.end; param_item++) {
-            RCLCPP_DEBUG(node->get_logger(), "param item is found: %d", param_item->key);
+            RCLCPP_DEBUG(node->get_logger(), "param item is found: %d",
+                         param_item->key);
             auto param_key = yaml_document_get_node(&doc, param_item->key);
             if (!param_key || param_key->type != YAML_SCALAR_NODE) continue;
             RCLCPP_DEBUG(node->get_logger(), "param item is a scalar");
             auto key = std::string((char *)param_key->data.scalar.value);
-            RCLCPP_DEBUG(node->get_logger(), "param item is %s", (char *)param_key->data.scalar.value);
+            RCLCPP_DEBUG(node->get_logger(), "param item is %s",
+                         (char *)param_key->data.scalar.value);
 
             auto param_value = yaml_document_get_node(&doc, param_item->value);
             if (!param_value || param_value->type != YAML_SCALAR_NODE) continue;
@@ -116,22 +118,29 @@ Implementation::Implementation(
               dir_channel = std::atoi((char *)param_value->data.scalar.value);
             } else {
               std::string string_value((char *)param_value->data.scalar.value);
-	      auto start = string_value.c_str();
-	      auto end = start + strlen(start);
+              const char *start = string_value.c_str();
+              const char *end = start + strlen(start);
 
               int int_value;
               auto res = std::from_chars(start, end, int_value);
-	      if (res.ec == std::errc{} && !*res.ptr) {
+              if (res.ec == std::errc{} && !*res.ptr) {
                 node_options.parameter_overrides().push_back({key, int_value});
-	      } else {
+              } else {
                 double double_value;
-                res = { std::from_chars(start, end, double_value) };
-	        if (res.ec == std::errc{} && !*res.ptr) {
-                  node_options.parameter_overrides().push_back({key, double_value});
-		} else {
-                  node_options.parameter_overrides().push_back({key, string_value});
-		}
-	      }
+#ifdef __clang__
+                if (sscanf(start, "%lf", &double_value) == 1)
+#else
+                res = std::from_chars(start, end, double_value);
+                if (res.ec == std::errc{} && !*res.ptr)
+#endif
+                {
+                  node_options.parameter_overrides().push_back(
+                      {key, double_value});
+                } else {
+                  node_options.parameter_overrides().push_back(
+                      {key, string_value});
+                }
+              }
             }
           }
 
@@ -151,26 +160,29 @@ Implementation::Implementation(
           RCLCPP_DEBUG(node->get_logger(), "instantiating the accessory");
           std::shared_ptr<Accessory> ptr;
           if (chapter == MICROCONTROLLER_CONFIG_CHAPTER_GPIO) {
-            ptr = std::make_shared<GPIOSwitch>(accessory_node.get(), this, channel,
-                                         node_prefix);
+            ptr = std::make_shared<GPIOSwitch>(accessory_node.get(), this,
+                                               channel, node_prefix);
             RCLCPP_DEBUG(node->get_logger(), "instantiated GPIO");
           } else if (chapter == MICROCONTROLLER_CONFIG_CHAPTER_PUL) {
             ptr = std::make_shared<PulDirStepperDriver>(
                 accessory_node.get(), this, channel, dir_channel, node_prefix);
-            RCLCPP_DEBUG(node->get_logger(), "instantiated PulDirStepperDriver");
+            RCLCPP_DEBUG(node->get_logger(),
+                         "instantiated PulDirStepperDriver");
           } else if (chapter == MICROCONTROLLER_CONFIG_CHAPTER_PWM) {
             if (type == "actuator_position") {
               RCLCPP_DEBUG(node_->get_logger(),
                            "Found a position actuator entry");
               ptr = std::make_shared<PWMActuatorVelocity>(
                   accessory_node.get(), this, channel, node_prefix);
-              RCLCPP_DEBUG(node->get_logger(), "instantiated PWMActuatorVelocity");
+              RCLCPP_DEBUG(node->get_logger(),
+                           "instantiated PWMActuatorVelocity");
             } else if (type == "actuator_position") {
               RCLCPP_DEBUG(node_->get_logger(),
                            "Found a velocity actuator entry");
               ptr = std::make_shared<PWMActuatorPosition>(
                   accessory_node.get(), this, channel, node_prefix);
-              RCLCPP_DEBUG(node->get_logger(), "instantiated PWMActuatorPosition");
+              RCLCPP_DEBUG(node->get_logger(),
+                           "instantiated PWMActuatorPosition");
             } else {
               RCLCPP_DEBUG(node_->get_logger(), "Found a simple pwm entry");
               ptr = std::make_shared<PWM>(accessory_node.get(), this, channel,
