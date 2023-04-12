@@ -24,15 +24,13 @@ uint8_t uart_inverse[UART_CHANNELS_NUM];
 #define INPUT_MAX 32 /* max characters to read per loop */
 uint8_t *input_buffer;
 
-extern "C" {
-
-extern void rm_uart_setup() {
+void rm_uart_setup() {
   // TODO(clairbee): can we rely on .bss here?
   memset(&uart_inverse, 0, sizeof(uart_inverse));
   input_buffer = (uint8_t *)malloc(INPUT_MAX);
 }
 
-extern void rm_uart_stream(uint16_t addr, uint8_t *ptr, uint8_t len) {
+void rm_uart_stream(uint16_t addr, uint8_t *ptr, uint8_t len) {
   if (addr < ADDR_UART_MIN || addr > ADDR_UART_MAX) {
     // TODO(clairbee): report the error
     return;
@@ -83,5 +81,3 @@ void rm_uart_loop() {
     rm_mgmt_report_stream(addr, input_buffer, input_offset);
   }
 }
-
-}  // extern "C"

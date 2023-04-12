@@ -14,10 +14,7 @@
 
 #include "../../include/remote_microcontroller/proto_uart.hpp"
 
-extern "C" {
 extern void rm_service_setup();
 extern void rm_service_loop();
-}
 
 #endif  // OPENVMP_REMOTE_MICROCONTROLLER_ARDUINO_SERVICE_HPP_INCLUDED
-

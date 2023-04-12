@@ -21,6 +21,7 @@ find_package(std_msgs REQUIRED)
 find_package(ros2_serial REQUIRED)
 find_package(remote_actuator REQUIRED)
 find_package(remote_switch REQUIRED)
+find_package(remote_stepper_driver REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 # Logic shared by all targets
@@ -32,7 +33,8 @@ include_directories(
   include
   ${ros2_serial_INCLUDE_DIRS}
   ${remote_actuator_INCLUDE_DIRS}
-  ${remote_swtich_INCLUDE_DIRS}
+  ${remote_switch_INCLUDE_DIRS}
+  ${remote_stepper_driver_INCLUDE_DIRS}
 )
 
 set(project_SOURCE_FILES
@@ -45,6 +47,10 @@ set(project_SOURCE_FILES
   src/pwm_actuator_position.cpp
   src/pwm_actuator_velocity.cpp
   src/uart.cpp
+  src/gpio.cpp
+  src/gpio_switch.cpp
+  src/puldir.cpp
+  src/puldir_stepper_driver.cpp
   src/accessory.cpp
 )
 
@@ -56,6 +62,8 @@ set(project_LIBRARIES
   ${remote_actuator_native_LIBRARIES}
   ${remote_switch_LIBRARIES}
   ${remote_switch_native_LIBRARIES}
+  ${remote_stepper_driver_LIBRARIES}
+  ${remote_stepper_driver_native_LIBRARIES}
 )
 
 set(project_DEPENDENCIES
@@ -64,6 +72,7 @@ set(project_DEPENDENCIES
   ros2_serial
   remote_actuator
   remote_switch
+  remote_stepper_driver
 )
 
 # Executable target

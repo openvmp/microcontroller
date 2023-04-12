@@ -48,7 +48,7 @@ void PWM::pwm_set_callback_(const std_msgs::msg::UInt16::SharedPtr value) {
   pwm_set(value->data);
 }
 
-// PWM does not use register read/write ops
+// PWM does not use register read ops
 void PWM::read_cb(uint16_t value) { (void)value; }
 // PWM does not use stream ops
 void PWM::stream_cb(const std::string &value) { (void)value; }

@@ -20,7 +20,7 @@ namespace remote_microcontroller {
 
 class Accessory {
  public:
-  Accessory(rclcpp::Node *node, Implementation* microcontroller, uint16_t addr,
+  Accessory(rclcpp::Node* node, Implementation* microcontroller, uint16_t addr,
             const std::string& prefix);
   virtual ~Accessory(){};
 
@@ -30,16 +30,16 @@ class Accessory {
   virtual void stream_cb(const std::string& value) = 0;
 
  protected:
+  rclcpp::Node* node_;
+  Implementation* microcontroller_;
+  uint16_t addr_;
+
   const std::string get_prefix() const;
 
   void write(uint16_t value);
   void stream(const std::string& value);
 
  private:
-  rclcpp::Node *node_;
-
-  Implementation* microcontroller_;
-  uint16_t addr_;
   const std::string prefix_;
 };
 

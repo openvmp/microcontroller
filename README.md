@@ -21,25 +21,38 @@ The high level features:
 - Microcontrollers I/O contacts are mapped to ROS2 services and topics using
   YAML config files
 
-The currently supported I/O:
+The currently supported I/O channels:
 
-- PWM pins
-  - Arbitrary control using std\_msgs::msg::UInt16
+- PWM
+  - Arbitrary position and velocity control using the ROS2 built-in std\_msgs::msg::UInt16
   - [remote_actuator](https://github.com/openvmp/actuator)
     - both position and velocity variants are supported
     - see [remote_hardware_interface](https://github.com/openvmp/remote_hardware_interface) for info on how to consume this interface
-- GPIO pins
+- PUL and PUL/DIR pulse train generation
+  - Arbitrary velocity control using the ROS2 built-in std\_msgs::msg::Int32 (pulses per second, sign is the direction)
+  - [remote_actuator](https://github.com/openvmp/actuator) for velocity control
+    - see [remote_hardware_interface](https://github.com/openvmp/remote_hardware_interface) for info on how to consume this interface
+  - [remote_stepper_driver](https://github.com/openvmp/stepper_driver)
+    - pulses per revolution and other parameter tuning
+    - provides the [remote_actuator](https://github.com/openvmp/actuator) interface too
+- GPIO
+  - Arbitrary state control using the ROS2 built-in std\_msgs::msg::Boolean
   - [remote_switch](https://github.com/openvmp/switch)
 - UART ports
-  - [ros2_serial_bus](https://github.com/openvmp/serial_bus)
+  - Arbitrary serial input and output using the ROS2 built-in std\_msgs::msg::String
+  - [ros2_serial](https://github.com/openvmp/serial)
 
 ### Supported microcontrollers
 
-It currently supports Arduino Mega2560 and Arduino Uno. But it was only tested on Arduino Mega2560.
+It currently supports Arduino Mega2560 and Arduino Uno.
+But it was only tested on Arduino Mega2560.
 
-Support for other Arduino boards can be added with trivial changes. Support for other microcontroller boards would require a little more effort. Contributors are very welcome!
+Support for other Arduino boards can be added with trivial changes.
+Support for other microcontroller boards would require a little more effort.
+Contributors are very welcome!
 
-See the deatils of mapping I/O channels to the pins of the microcontroller [here](./microcontrollers/README.md).
+See the deatils of mapping I/O channels to the pins of the microcontroller
+[here](./microcontrollers/README.md).
 
 ### Getting started
 

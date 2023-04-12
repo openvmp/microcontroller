@@ -18,8 +18,6 @@ uint8_t gpio_modes[GPIO_CHANNELS_NUM];
 #define GPIO_MODE_INPUT_PULLUP 2
 #define GPIO_MODE_OUTPUT 3
 
-extern "C" {
-
 void rm_gpio_setup() {
   // TODO(clairbee): can we rely on .bss here?
   memset(&gpio_modes, 0, sizeof(gpio_modes));
@@ -72,5 +70,3 @@ void rm_gpio_write(uint8_t addr, uint16_t value) {
 
   digitalWrite(channel, value ? HIGH : LOW);
 }
-
-}  // extern "C"

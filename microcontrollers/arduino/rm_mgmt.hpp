@@ -14,11 +14,9 @@
 
 #include "../../include/remote_microcontroller/proto_mgmt.hpp"
 
-extern "C" {
 void rm_mgmt_setup();
 void rm_mgmt_loop();
 void rm_mgmt_report_read(uint16_t addr, uint16_t value);
 void rm_mgmt_report_stream(uint16_t addr, uint8_t *ptr, uint8_t len);
-}
 
 #endif  // OPENVMP_REMOTE_MICROCONTROLLER_ARDUINO_MGMT_HPP_INCLUDED

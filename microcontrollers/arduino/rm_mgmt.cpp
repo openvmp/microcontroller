@@ -34,8 +34,6 @@ uint8_t bytes_left;
 uint8_t *stream_data;
 uint16_t stream_data_size;
 
-extern "C" {
-
 void rm_mgmt_setup() {
   stream_data_size = 256;
   stream_data = (uint8_t *)malloc(stream_data_size);
@@ -163,5 +161,3 @@ void rm_mgmt_report_stream(uint16_t addr, uint8_t *ptr, uint8_t len) {
   Serial.write(&response[0], sizeof(response));
   Serial.write(ptr, len);
 }
-
-}  // extern "C"

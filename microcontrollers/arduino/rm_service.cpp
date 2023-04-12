@@ -10,21 +10,15 @@
 #include "rm_service.hpp"
 
 #include "../../include/remote_microcontroller/proto_service.hpp"
-
 #include "rm_mgmt.hpp"
 
 uint32_t service_cycle;
 
-extern "C" {
-
-extern void rm_service_setup() {}
+void rm_service_setup() {}
 
 void rm_service_loop() {
-  service_cycle ++;
+  service_cycle++;
   if (service_cycle % 1000 == 0) {
     rm_mgmt_report_read(ADDR_SERVICE_PULSE, service_cycle / 1000);
   }
 }
-
-}  // extern "C"
-

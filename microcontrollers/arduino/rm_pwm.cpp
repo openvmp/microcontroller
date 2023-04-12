@@ -21,9 +21,7 @@ uint8_t pins_9_10_initialized;
 
 extern uint8_t pwm_channel_to_pin(uint8_t channel);
 
-extern "C" {
-
-extern void rm_pwm_setup() {
+void rm_pwm_setup() {
   // We can only use the Servo library if the PWM pins 9 and 10 are not used
   servo_library_initialized = 0;
   pins_9_10_initialized = 0;
@@ -32,7 +30,7 @@ extern void rm_pwm_setup() {
   memset(&pwm_initialized, 0, sizeof(pwm_initialized));
 }
 
-extern void rm_pwm(uint8_t addr, uint16_t value) {
+void rm_pwm(uint8_t addr, uint16_t value) {
   uint8_t channel = addr - ADDR_PWM_MIN;
 
   if (channel < 0 || channel >= PWM_CHANNELS_NUM) {
@@ -77,5 +75,3 @@ extern void rm_pwm(uint8_t addr, uint16_t value) {
     servo[channel].write(value);  // should be from 0 to 180
   }
 }
-
-}  // extern "C"
