@@ -13,9 +13,10 @@
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <locale>
+#include <charconv>
 
 #include "remote_microcontroller/config.hpp"
-#include "remote_microcontroller/gpio.hpp"
+#include "remote_microcontroller/gpio_switch.hpp"
 #include "remote_microcontroller/interface.hpp"
 #include "remote_microcontroller/proto_mgmt.hpp"
 #include "remote_microcontroller/proto_service.hpp"
@@ -53,18 +54,22 @@ Implementation::Implementation(
   auto config_file = fopen(config_filename.c_str(), "r");
   yaml_parser_t parser;
   yaml_document_t doc;
+  yaml_parser_initialize(&parser);
   yaml_parser_set_input_file(&parser, config_file);
   if (yaml_parser_load(&parser, &doc)) {
+    RCLCPP_DEBUG(node->get_logger(), "YAML file is loaded");
     yaml_node_t *root = yaml_document_get_root_node(&doc);
 
-    if (root->type == YAML_MAPPING_NODE) {
+    if (root && root->type == YAML_MAPPING_NODE) {
       for (auto root_item = root->data.mapping.pairs.start;
            root_item < root->data.mapping.pairs.end; root_item++) {
+        RCLCPP_DEBUG(node->get_logger(), "root item is found");
         auto root_key = yaml_document_get_node(&doc, root_item->key);
-        if (root_key->type != YAML_SCALAR_NODE) continue;
+        if (!root_key || root_key->type != YAML_SCALAR_NODE) continue;
 
         auto accessories = yaml_document_get_node(&doc, root_item->value);
-        if (accessories->type != YAML_SEQUENCE_NODE) continue;
+        if (!accessories || accessories->type != YAML_SEQUENCE_NODE) continue;
+        RCLCPP_DEBUG(node->get_logger(), "root item is a sequence");
 
         std::string chapter((char *)root_key->data.scalar.value);
 
@@ -73,8 +78,10 @@ Implementation::Implementation(
         for (accessory_item = accessories->data.sequence.items.start, i = 0;
              accessory_item < accessories->data.sequence.items.top;
              ++accessory_item, ++i) {
+          RCLCPP_DEBUG(node->get_logger(), "accessory item is found");
           auto accessory = yaml_document_get_node(&doc, *accessory_item);
-          if (accessory->type != YAML_MAPPING_NODE) continue;
+          if (!accessory || accessory->type != YAML_MAPPING_NODE) continue;
+          RCLCPP_DEBUG(node->get_logger(), "accessory item is a map");
 
           std::string node_name;
           std::string node_prefix;
@@ -85,12 +92,16 @@ Implementation::Implementation(
 
           for (auto param_item = accessory->data.mapping.pairs.start;
                param_item < accessory->data.mapping.pairs.end; param_item++) {
+            RCLCPP_DEBUG(node->get_logger(), "param item is found: %d", param_item->key);
             auto param_key = yaml_document_get_node(&doc, param_item->key);
-            if (param_key->type != YAML_SCALAR_NODE) continue;
+            if (!param_key || param_key->type != YAML_SCALAR_NODE) continue;
+            RCLCPP_DEBUG(node->get_logger(), "param item is a scalar");
             auto key = std::string((char *)param_key->data.scalar.value);
+            RCLCPP_DEBUG(node->get_logger(), "param item is %s", (char *)param_key->data.scalar.value);
 
             auto param_value = yaml_document_get_node(&doc, param_item->value);
-            if (param_value->type != YAML_SCALAR_NODE) continue;
+            if (!param_value || param_value->type != YAML_SCALAR_NODE) continue;
+            RCLCPP_DEBUG(node->get_logger(), "param value is a scalar");
 
             if (key == "type") {
               type = std::string((char *)param_value->data.scalar.value);
@@ -102,22 +113,25 @@ Implementation::Implementation(
             } else if (key == "channel") {
               channel = std::atoi((char *)param_value->data.scalar.value);
             } else if (key == "dir_channel") {
-              channel = std::atoi((char *)param_value->data.scalar.value);
+              dir_channel = std::atoi((char *)param_value->data.scalar.value);
             } else {
-              try {
-                int value = std::atoi((char *)param_value->data.scalar.value);
-                node_options.parameter_overrides().push_back({key, value});
-              } catch (const std::exception &_e) {
-                try {
-                  double value =
-                      std::atof((char *)param_value->data.scalar.value);
-                  node_options.parameter_overrides().push_back({key, value});
-                } catch (const std::exception &_e) {
-                  auto value =
-                      std::string((char *)param_value->data.scalar.value);
-                  node_options.parameter_overrides().push_back({key, value});
-                }
-              }
+              std::string string_value((char *)param_value->data.scalar.value);
+	      auto start = string_value.c_str();
+	      auto end = start + strlen(start);
+
+              int int_value;
+              auto res = std::from_chars(start, end, int_value);
+	      if (res.ec == std::errc{} && !*res.ptr) {
+                node_options.parameter_overrides().push_back({key, int_value});
+	      } else {
+                double double_value;
+                res = { std::from_chars(start, end, double_value) };
+	        if (res.ec == std::errc{} && !*res.ptr) {
+                  node_options.parameter_overrides().push_back({key, double_value});
+		} else {
+                  node_options.parameter_overrides().push_back({key, string_value});
+		}
+	      }
             }
           }
 
@@ -127,38 +141,46 @@ Implementation::Implementation(
           }
 
           // Create the node
+          RCLCPP_DEBUG(node->get_logger(), "creating the node");
           node_options.use_intra_process_comms(true);
           auto accessory_node =
               std::make_shared<rclcpp::Node>(node_name, ns, node_options);
           exec->add_node(accessory_node);
 
           // Instantiate the accessory
+          RCLCPP_DEBUG(node->get_logger(), "instantiating the accessory");
           std::shared_ptr<Accessory> ptr;
-          if (MICROCONTROLLER_CONFIG_CHAPTER_GPIO) {
-            ptr = std::make_shared<GPIO>(accessory_node.get(), this, channel,
+          if (chapter == MICROCONTROLLER_CONFIG_CHAPTER_GPIO) {
+            ptr = std::make_shared<GPIOSwitch>(accessory_node.get(), this, channel,
                                          node_prefix);
-          } else if (MICROCONTROLLER_CONFIG_CHAPTER_PUL) {
+            RCLCPP_DEBUG(node->get_logger(), "instantiated GPIO");
+          } else if (chapter == MICROCONTROLLER_CONFIG_CHAPTER_PUL) {
             ptr = std::make_shared<PulDirStepperDriver>(
                 accessory_node.get(), this, channel, dir_channel, node_prefix);
-          } else if (MICROCONTROLLER_CONFIG_CHAPTER_PWM) {
+            RCLCPP_DEBUG(node->get_logger(), "instantiated PulDirStepperDriver");
+          } else if (chapter == MICROCONTROLLER_CONFIG_CHAPTER_PWM) {
             if (type == "actuator_position") {
               RCLCPP_DEBUG(node_->get_logger(),
                            "Found a position actuator entry");
               ptr = std::make_shared<PWMActuatorVelocity>(
                   accessory_node.get(), this, channel, node_prefix);
+              RCLCPP_DEBUG(node->get_logger(), "instantiated PWMActuatorVelocity");
             } else if (type == "actuator_position") {
               RCLCPP_DEBUG(node_->get_logger(),
                            "Found a velocity actuator entry");
               ptr = std::make_shared<PWMActuatorPosition>(
                   accessory_node.get(), this, channel, node_prefix);
+              RCLCPP_DEBUG(node->get_logger(), "instantiated PWMActuatorPosition");
             } else {
               RCLCPP_DEBUG(node_->get_logger(), "Found a simple pwm entry");
               ptr = std::make_shared<PWM>(accessory_node.get(), this, channel,
                                           node_prefix);
+              RCLCPP_DEBUG(node->get_logger(), "instantiated PWM");
             }
-          } else if (MICROCONTROLLER_CONFIG_CHAPTER_UART) {
+          } else if (chapter == MICROCONTROLLER_CONFIG_CHAPTER_UART) {
             ptr = std::make_shared<UART>(accessory_node.get(), this, channel,
                                          node_prefix);
+            RCLCPP_DEBUG(node->get_logger(), "instantiated UART");
           }
 
           // Store the accessory in the collection
@@ -166,8 +188,10 @@ Implementation::Implementation(
         }
       }
     }
+    RCLCPP_DEBUG(node->get_logger(), "Destroying the document");
     yaml_document_delete(&doc);
   }
+  RCLCPP_DEBUG(node->get_logger(), "Destroying the parser");
   yaml_parser_delete(&parser);
 }
 

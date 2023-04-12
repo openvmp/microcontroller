@@ -44,8 +44,10 @@ void rm_gpio_read(uint8_t addr) {
 
   if (!pullup && gpio_modes[channel] != GPIO_MODE_INPUT) {
     pinMode(channel, INPUT);
+    gpio_modes[channel] = GPIO_MODE_INPUT;
   } else if (pullup && gpio_modes[channel] != GPIO_MODE_INPUT_PULLUP) {
     pinMode(channel, INPUT_PULLUP);
+    gpio_modes[channel] = GPIO_MODE_INPUT_PULLUP;
   }
 
   bool result = digitalRead(channel);
@@ -66,6 +68,7 @@ void rm_gpio_write(uint8_t addr, uint16_t value) {
 
   if (gpio_modes[channel] != GPIO_MODE_OUTPUT) {
     pinMode(channel, OUTPUT);
+    gpio_modes[channel] = GPIO_MODE_OUTPUT;
   }
 
   digitalWrite(channel, value ? HIGH : LOW);

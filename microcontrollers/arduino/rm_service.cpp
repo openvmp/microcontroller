@@ -18,7 +18,7 @@ void rm_service_setup() {}
 
 void rm_service_loop() {
   service_cycle++;
-  if (service_cycle % 1000 == 0) {
-    rm_mgmt_report_read(ADDR_SERVICE_PULSE, service_cycle / 1000);
+  if (service_cycle % 10000 == 0) {
+    rm_mgmt_report_read(ADDR_SERVICE_PULSE, service_cycle / 10000);
   }
 }
