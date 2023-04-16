@@ -14,11 +14,15 @@
 
 uint32_t service_cycle;
 
-void rm_service_setup() {}
+void rm_service_setup() {
+  pinMode(13, OUTPUT);
+  digitalWrite(13, LOW);
+}
 
 void rm_service_loop() {
   service_cycle++;
-  if (service_cycle % 10000 == 0) {
-    rm_mgmt_report_read(ADDR_SERVICE_PULSE, service_cycle / 10000);
+  if (service_cycle % 100000 == 0) {
+    digitalWrite(13, HIGH - digitalRead(13));  // toggle led
+    rm_mgmt_report_read(ADDR_SERVICE_PULSE, service_cycle / 100000);
   }
 }

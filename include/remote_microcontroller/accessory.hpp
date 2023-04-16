@@ -26,6 +26,7 @@ class Accessory {
 
   uint16_t get_addr() const { return addr_; }
 
+  virtual void init();  // must set 'initialized_'
   virtual void read_cb(uint16_t value) = 0;
   virtual void stream_cb(const std::string& value) = 0;
 
@@ -33,10 +34,12 @@ class Accessory {
   rclcpp::Node* node_;
   Implementation* microcontroller_;
   uint16_t addr_;
+  bool initialized_;
 
   const std::string get_prefix() const;
 
-  void write(uint16_t value);
+  void write(uint16_t value, bool force = false);
+  void read();
   void stream(const std::string& value);
 
  private:

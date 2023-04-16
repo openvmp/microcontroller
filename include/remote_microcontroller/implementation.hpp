@@ -32,9 +32,11 @@ class Implementation final : public Interface {
   virtual ~Implementation() {}
 
   void write(uint16_t addr, uint16_t value);
+  void read(uint16_t addr);
   void stream(uint16_t addr, const std::string &value);
 
  private:
+  bool initialized_;
   std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> exec_;
   std::shared_ptr<ros2_serial::Interface> prov_;
   std::string input_queue_;

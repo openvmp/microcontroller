@@ -10,7 +10,10 @@
 #include "config_uart.hpp"
 
 #include <Arduino.h>
+#include <SoftwareSerial.h>
 
-Stream *uart[UART_CHANNELS_NUM] = {nullptr};
+HardwareSerial *uart_hw[UART_HW_CHANNELS_NUM] = {};
+SoftwareSerial *uart_sw[UART_SF_CHANNELS_NUM] = {nullptr};
+Stream **uart_ptr[UART_CHANNELS_NUM] = {&uart_sw[0]};
 uint8_t uart_rx[UART_CHANNELS_NUM] = {2};
 uint8_t uart_tx[UART_CHANNELS_NUM] = {3};

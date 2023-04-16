@@ -27,9 +27,11 @@ class UART : public Accessory, public ros2_serial::Implementation {
   UART(rclcpp::Node *node,
        remote_microcontroller::Implementation *microcontroller, int index,
        const std::string &prefix);
+  rclcpp::Parameter baud_rate;
 
  protected:
   // implementation of Accessory
+  virtual void init() override;
   virtual void read_cb(uint16_t value) override;
   virtual void stream_cb(const std::string &value) override;
 

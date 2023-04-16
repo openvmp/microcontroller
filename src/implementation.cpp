@@ -32,7 +32,7 @@ namespace remote_microcontroller {
 Implementation::Implementation(
     rclcpp::Node *node,
     std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> exec)
-    : Interface{node}, exec_{exec} {
+    : Interface{node}, initialized_{false}, exec_{exec} {
   auto prefix = get_prefix_();
   std::string ns = node_->get_namespace();
 
@@ -220,6 +220,12 @@ void Implementation::write(uint16_t addr, uint16_t value) {
   prov_->output(std::string((char *)&cmd[0], sizeof(cmd)));
 }
 
+void Implementation::read(uint16_t addr) {
+  uint8_t cmd[5];
+  rm_mgmt_pack5_read(addr, cmd);
+  prov_->output(std::string((char *)&cmd[0], sizeof(cmd)));
+}
+
 void Implementation::stream(uint16_t addr, const std::string &value) {
   uint8_t cmd[6];
   rm_mgmt_pack6_stream(addr, value.length(), cmd);
@@ -253,6 +259,16 @@ void Implementation::input_cb_real_(const std::string &msg) {
     if ((uint8_t)input_queue_[1] != HEADER_2) {
       input_queue_ = input_queue_.substr(2);
       continue;
+    }
+
+    // With some level of confidence we can assume that we are receiving data
+    // from a properly programmed controller.
+    // Now it's time to initialize all accessories if it has not been done yet.
+    if (!initialized_) {
+      for (auto &acc_it : accessories_) {
+        acc_it.second->init();
+      }
+      initialized_ = true;
     }
 
     if (input_queue_[2] == COMMAND_READ) {

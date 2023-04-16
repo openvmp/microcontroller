@@ -106,10 +106,12 @@ void rm_mgmt_loop() {
     case MGMT_INPUT_VALUE_2:
       value += byte;
 
-      if (addr >= ADDR_PWM_MIN && byte <= ADDR_PWM_MAX) {
+      if (addr >= ADDR_PWM_MIN && addr <= ADDR_PWM_MAX) {
         rm_pwm(addr, value);
-      } else if (addr >= ADDR_GPIO_MIN && byte <= ADDR_GPIO_MAX) {
+      } else if (addr >= ADDR_GPIO_MIN && addr <= ADDR_GPIO_MAX) {
         rm_gpio_write(addr, value);
+      } else if (addr >= ADDR_UART_MIN && addr <= ADDR_UART_MAX) {
+        rm_uart_write(addr, value);
       } else {
         // TODO(clairbee): report the error
       }
