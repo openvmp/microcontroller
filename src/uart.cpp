@@ -73,6 +73,8 @@ void UART::init() {
   write(value, true);
 
   initialized_ = true;
+
+  init_serial_();
 }
 
 void UART::read_cb(uint16_t value) {
@@ -86,16 +88,16 @@ void UART::stream_cb(const std::string &msg) {
     input_cb_(msg, input_cb_user_data_);
   }
 
-  auto message = std_msgs::msg::String();
-  message.data = msg;
+  auto message = std_msgs::msg::UInt8MultiArray();
+  message.data = std::vector<uint8_t>(msg.begin(), msg.end());
   inspect_input->publish(message);
 }
 
 void UART::output(const std::string &msg) {
   stream(msg);
 
-  auto message = std_msgs::msg::String();
-  message.data = msg;
+  auto message = std_msgs::msg::UInt8MultiArray();
+  message.data = std::vector<uint8_t>(msg.begin(), msg.end());
   inspect_output->publish(message);
 }
 

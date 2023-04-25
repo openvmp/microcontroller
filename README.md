@@ -51,7 +51,7 @@ Support for other Arduino boards can be added with trivial changes.
 Support for other microcontroller boards would require a little more effort.
 Contributors are very welcome!
 
-See the deatils of mapping I/O channels to the pins of the microcontroller
+See the details of mapping I/O channels to the pins of the microcontroller
 [here](./microcontrollers/README.md).
 
 ### Getting started
@@ -67,7 +67,6 @@ git clone https://github.com/openvmp/encoder.git src/remote_encoder
 git clone https://github.com/openvmp/switch.git src/remote_switch
 git clone https://github.com/openvmp/serial.git src/ros2_serial
 git clone https://github.com/openvmp/microcontroller.git src/remote_microcontroller
-git clone https://github.com/jbeder/yaml-cpp.git src/yaml-cpp
 ```
 
 After building the workspace, you can link against this package as a library

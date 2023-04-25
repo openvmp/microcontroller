@@ -229,8 +229,7 @@ void Implementation::read(uint16_t addr) {
 void Implementation::stream(uint16_t addr, const std::string &value) {
   uint8_t cmd[6];
   rm_mgmt_pack6_stream(addr, value.length(), cmd);
-  prov_->output(std::string((char *)&cmd[0], sizeof(cmd)));
-  prov_->output(value);
+  prov_->output(std::string((char *)&cmd[0], sizeof(cmd)) + value);
 }
 
 /* static */ void Implementation::input_cb_(const std::string &msg,
