@@ -24,8 +24,8 @@
 #include "remote_microcontroller/pwm_actuator_position.hpp"
 #include "remote_microcontroller/pwm_actuator_velocity.hpp"
 #include "remote_microcontroller/uart.hpp"
-#include "ros2_serial/factory.hpp"
-#include "ros2_serial/utils.hpp"
+#include "remote_serial/factory.hpp"
+#include "remote_serial/utils.hpp"
 
 namespace remote_microcontroller {
 
@@ -36,7 +36,7 @@ Implementation::Implementation(
   auto prefix = get_prefix_();
   std::string ns = node_->get_namespace();
 
-  prov_ = ros2_serial::Factory::New(node);
+  prov_ = remote_serial::Factory::New(node);
   prov_->register_input_cb(&Implementation::input_cb_, this);
 
   srv_reset_ = node_->create_service<srv::Reset>(
@@ -243,12 +243,12 @@ void Implementation::stream(uint16_t addr, const std::string &value) {
 
 void Implementation::input_cb_real_(const std::string &msg) {
   RCLCPP_DEBUG(node_->get_logger(), "Received data: %s",
-               (ros2_serial::utils::bin2hex(msg)).c_str());
+               (remote_serial::utils::bin2hex(msg)).c_str());
 
   input_queue_mutex_.lock();
   input_queue_ += msg;  // TODO(clairbee): optimize it to reduce extra copying
   RCLCPP_DEBUG(node_->get_logger(), "Queued data: %s",
-               (ros2_serial::utils::bin2hex(input_queue_)).c_str());
+               (remote_serial::utils::bin2hex(input_queue_)).c_str());
 
   while (input_queue_.length() >= LENGTH_CMD_MIN) {
     if ((uint8_t)input_queue_[0] != HEADER_1) {

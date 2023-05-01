@@ -40,7 +40,7 @@ The currently supported I/O channels:
   - [remote_switch](https://github.com/openvmp/switch)
 - UART ports
   - Arbitrary serial input and output using the ROS2 built-in std\_msgs::msg::String
-  - [ros2_serial](https://github.com/openvmp/serial)
+  - [remote_serial](https://github.com/openvmp/serial)
 
 ### Supported microcontrollers
 
@@ -65,7 +65,7 @@ mkdir src
 git clone https://github.com/openvmp/actuator.git src/remote_actuator
 git clone https://github.com/openvmp/encoder.git src/remote_encoder
 git clone https://github.com/openvmp/switch.git src/remote_switch
-git clone https://github.com/openvmp/serial.git src/ros2_serial
+git clone https://github.com/openvmp/serial.git src/remote_serial
 git clone https://github.com/openvmp/microcontroller.git src/remote_microcontroller
 ```
 
@@ -94,7 +94,7 @@ In both cases the following parameters need to be provided:
 - serial_dev_name: i.e. /dev/ttyACM0
 - serial_baud_rate: i.e. 115200
 
-See [ros2_serial](https://github.com/openvmp/serial/blob/main/README.md) for more serial port parameters if needed.
+See [remote_serial](https://github.com/openvmp/serial/blob/main/README.md) for more serial port parameters if needed.
 
 Here is an example of the configuration file for controlling a single servo:
 

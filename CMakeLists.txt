@@ -18,7 +18,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(ros2_serial REQUIRED)
+find_package(remote_serial REQUIRED)
 find_package(remote_actuator REQUIRED)
 find_package(remote_switch REQUIRED)
 find_package(remote_stepper_driver REQUIRED)
@@ -31,7 +31,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 include_directories(
   include
-  ${ros2_serial_INCLUDE_DIRS}
+  ${remote_serial_INCLUDE_DIRS}
   ${remote_actuator_INCLUDE_DIRS}
   ${remote_switch_INCLUDE_DIRS}
   ${remote_stepper_driver_INCLUDE_DIRS}
@@ -56,8 +56,8 @@ set(project_SOURCE_FILES
 
 set(project_LIBRARIES
   ${rclcpp_LIBRARIES}
-  ${ros2_serial_LIBRARIES}
-  ${ros2_serial_native_LIBRARIES}
+  ${remote_serial_LIBRARIES}
+  ${remote_serial_native_LIBRARIES}
   ${remote_actuator_LIBRARIES}
   ${remote_actuator_native_LIBRARIES}
   ${remote_switch_LIBRARIES}
@@ -69,7 +69,7 @@ set(project_LIBRARIES
 set(project_DEPENDENCIES
   rclcpp
   std_msgs
-  ros2_serial
+  remote_serial
   remote_actuator
   remote_switch
   remote_stepper_driver

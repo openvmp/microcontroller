@@ -18,11 +18,11 @@
 #include "remote_microcontroller/accessory.hpp"
 #include "remote_microcontroller/implementation.hpp"
 #include "remote_microcontroller/proto_uart.hpp"
-#include "ros2_serial/implementation.hpp"
+#include "remote_serial/implementation.hpp"
 
 namespace remote_microcontroller {
 
-class UART : public Accessory, public ros2_serial::Implementation {
+class UART : public Accessory, public remote_serial::Implementation {
  public:
   UART(rclcpp::Node *node,
        remote_microcontroller::Implementation *microcontroller, int index,
@@ -35,7 +35,7 @@ class UART : public Accessory, public ros2_serial::Implementation {
   virtual void read_cb(uint16_t value) override;
   virtual void stream_cb(const std::string &value) override;
 
-  // implementation of ros2_serial::Implementation
+  // implementation of remote_serial::Implementation
   virtual void output(const std::string &msg) override;
   virtual void register_input_cb(void (*input_cb)(const std::string &msg,
                                                   void *user_data),

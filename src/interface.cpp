@@ -10,7 +10,7 @@
 #include "remote_microcontroller/interface.hpp"
 
 #include "remote_actuator/factory.hpp"
-#include "ros2_serial/factory.hpp"
+#include "remote_serial/factory.hpp"
 
 namespace remote_microcontroller {
 

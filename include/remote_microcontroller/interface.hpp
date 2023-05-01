@@ -16,7 +16,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "remote_actuator/interface.hpp"
 #include "remote_microcontroller/srv/reset.hpp"
-#include "ros2_serial/interface.hpp"
+#include "remote_serial/interface.hpp"
 
 namespace remote_microcontroller {
 

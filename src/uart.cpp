@@ -16,7 +16,7 @@ UART::UART(rclcpp::Node *node,
            const std::string &prefix)
     : Accessory(node, microcontroller, (uint16_t)(ADDR_UART_MIN + index),
                 prefix),
-      ros2_serial::Implementation(node, prefix),
+      remote_serial::Implementation(node, prefix),
       input_cb_{nullptr},
       input_cb_user_data_{nullptr} {
   node->declare_parameter("serial_baud_rate", 115200);

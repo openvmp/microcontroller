@@ -16,7 +16,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "remote_microcontroller/interface.hpp"
 #include "remote_microcontroller/srv/reset.hpp"
-#include "ros2_serial/implementation.hpp"
+#include "remote_serial/implementation.hpp"
 
 #define MICROCONTROLLER_SERVICE_RESET "/reset"
 
@@ -38,7 +38,7 @@ class Implementation final : public Interface {
  private:
   bool initialized_;
   std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> exec_;
-  std::shared_ptr<ros2_serial::Interface> prov_;
+  std::shared_ptr<remote_serial::Interface> prov_;
   std::string input_queue_;
   std::mutex input_queue_mutex_;
 

@@ -11,7 +11,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
-  <depend>ros2_serial</depend>
+  <depend>remote_serial</depend>
   <depend>remote_actuator</depend>
   <depend>remote_switch</depend>
   <depend>remote_stepper_driver</depend>
